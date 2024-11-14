@@ -1,10 +1,12 @@
 import logging
 from moviepy.editor import VideoFileClip, concatenate_videoclips
+import os
+from flask import request, send_from_directory, current_app as app
 
 # Set up logging configuration
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def segment_candidates(candidates, video_file, filename):
+def segment_candidates(user_id, candidates, video_file, filename):
     video_candidates_paths = []
 
     for index, candidate in enumerate(candidates):
@@ -15,14 +17,14 @@ def segment_candidates(candidates, video_file, filename):
                 continue  # Skip to the next candidate if 'discussion' is invalid
             
             segment_filename = f"{filename}_{index}"
-            out_path = candidate_to_video(candidate, video_file, segment_filename)
+            out_path = candidate_to_video(user_id,candidate, video_file, segment_filename)
             video_candidates_paths.append(out_path)
         except Exception as e:
             logging.error(f"Error processing candidate {index}: {e}", exc_info=True)
 
     return video_candidates_paths
 
-def candidate_to_video(transcription, video_file, filename):
+def candidate_to_video(user_id,transcription, video_file, filename):
     clips = []
     try:
         for transcribe in transcription["discussion"]:
@@ -38,7 +40,14 @@ def candidate_to_video(transcription, video_file, filename):
         height = 420
         aspect_ratio = (9, 16)
         width = int((height / aspect_ratio[1]) * aspect_ratio[0])
-        out_path = f"C:/Users/AB/Downloads/{filename}.mp4"
+        
+        UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../uploads",f"{user_id}")
+        app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+        # Ensure the uploads directory exists
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+        out_path = f"{app.config['UPLOAD_FOLDER']}/{filename}.mp4"
+        
+        # out_path = f"C:/Users/AB/Downloads/{filename}.mp4"
 
         # Concatenate clips and write final video with specified fps
         # final_clip = concatenate_videoclips(clips, method="compose").resize(width=width, height=height)
@@ -50,7 +59,7 @@ def candidate_to_video(transcription, video_file, filename):
             clip.close()
         final_clip.close()
 
-        return out_path
+        return f"/{user_id}/{filename}.mp4"
 
     except Exception as e:
         logging.error(f"Error creating video for '{filename}': {e}", exc_info=True)
