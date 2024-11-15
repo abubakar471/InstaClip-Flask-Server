@@ -15,7 +15,7 @@ from utils.create_unique_id import create_unique_id;
 from utils.firebase import upload_video_to_db
 
 client = OpenAI(
-    api_key=('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'),
+    api_key=('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'),
 )
 
 
@@ -60,10 +60,10 @@ def upload_video():
     
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     
-    savedFile = file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-    print("saved file : ", filepath);
+    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    
     audiopaths = convert_video_to_audio(user_id, filepath, filename)
-    locations = upload_video_to_db(filepath, audiopaths["absolute_audio_path"])
+    # locations = upload_video_to_db(filepath, audiopaths["absolute_audio_path"])
 
     local_video_filepath = f"/{user_id}/{filename}"
     print("local_video_path : ", local_video_filepath);
@@ -72,7 +72,7 @@ def upload_video():
         "message": "File uploaded successfully!",
         "success": True,
         "details": {
-            "firebase_paths": locations,
+            # "firebase_paths": locations,
             "local_audio_filepath" : audiopaths["local_audio_path"],
             "local_video_filepath" : local_video_filepath
         }
